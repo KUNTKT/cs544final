@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cot-factors"
+version = "0.1.0"
+description = "CoT structural factors (N,L,R,P) experiments on StrategyQA"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "torch>=2.1.0",
+  "transformers>=4.40.0",
+  "accelerate>=0.28.0",
+  "safetensors>=0.4.0",
+  "pandas>=2.0.0",
+  "numpy>=1.24.0",
+  "pyyaml>=6.0.0",
+  "tqdm>=4.66.0",
+  "scipy>=1.10.0",
+]
+
+[project.scripts]
+cot-run = "cot_factors.run:main"
+cot-analyze = "cot_factors.analyze:main"
+cot-compare = "cot_factors.compare:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cot_factors*"]
