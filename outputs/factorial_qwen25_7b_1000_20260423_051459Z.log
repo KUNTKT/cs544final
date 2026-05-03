@@ -1,5 +1,0 @@
-[cuda] CUDA_VISIBLE_DEVICES=(unset)
-[cuda] torch.cuda.is_available()=True, device_count=1
-[cuda] device[0]=NVIDIA A100-SXM4-80GB
-加载 vLLM 模型（首次可能数分钟：读权重、编译 kernel；此阶段 GPU 利用率有时仍接近 0，属正常现象；若下方显示无 CUDA，则当前节点未暴露 GPU，需在 GPU 作业里运行）。
-加载 vLLM 模型: /scratch/ktang115/models/Qwen2.5-7B-Instruct …
