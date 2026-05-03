@@ -1,0 +1,30 @@
+# Default experiment config (overridable via CLI)
+
+data:
+  path: /scratch/ktang115/data/strategy-qa/strategyQA_train.json
+  # Use first N items for a quick run; null = full dataset
+  max_items: 200
+  seed: 42
+
+model:
+  # Example instruction-tuned model from the proposal; replace with a local path if needed
+  name: Qwen/Qwen2.5-7B-Instruct
+  torch_dtype: bfloat16
+  device_map: auto
+  trust_remote_code: true
+
+generation:
+  max_new_tokens: 512
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+
+# Self-consistency: set do_sample=true and num_samples>1 in generation when enabled
+self_consistency:
+  enabled: false
+  num_samples: 5
+  temperature: 0.7
+  top_p: 0.95
+
+output:
+  dir: ./outputs

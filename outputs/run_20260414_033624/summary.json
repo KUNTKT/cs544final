@@ -1,0 +1,44 @@
+[
+  {
+    "condition": "n_low__l_concise__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 285,
+    "accuracy": 0.5711422845691383,
+    "parse_failed": 1
+  },
+  {
+    "condition": "n_low__l_detailed__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 277,
+    "accuracy": 0.5630081300813008,
+    "parse_failed": 8
+  },
+  {
+    "condition": "n_mid__l_concise__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 266,
+    "accuracy": 0.5352112676056338,
+    "parse_failed": 3
+  },
+  {
+    "condition": "n_mid__l_detailed__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 273,
+    "accuracy": 0.5605749486652978,
+    "parse_failed": 13
+  },
+  {
+    "condition": "n_high__l_concise__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 268,
+    "accuracy": 0.5381526104417671,
+    "parse_failed": 2
+  },
+  {
+    "condition": "n_high__l_detailed__r_student__p_deductive",
+    "n_items": 500,
+    "correct": 256,
+    "accuracy": 0.5366876310272537,
+    "parse_failed": 23
+  }
+]

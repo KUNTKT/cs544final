@@ -1,0 +1,44 @@
+[
+  {
+    "condition": "n_low__l_concise__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 1,
+    "accuracy": 0.2,
+    "parse_failed": 0
+  },
+  {
+    "condition": "n_low__l_detailed__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 1,
+    "accuracy": 0.2,
+    "parse_failed": 0
+  },
+  {
+    "condition": "n_mid__l_concise__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 1,
+    "accuracy": 0.2,
+    "parse_failed": 0
+  },
+  {
+    "condition": "n_mid__l_detailed__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 2,
+    "accuracy": 0.4,
+    "parse_failed": 0
+  },
+  {
+    "condition": "n_high__l_concise__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 2,
+    "accuracy": 0.4,
+    "parse_failed": 0
+  },
+  {
+    "condition": "n_high__l_detailed__r_student__p_deductive",
+    "n_items": 5,
+    "correct": 3,
+    "accuracy": 0.75,
+    "parse_failed": 1
+  }
+]

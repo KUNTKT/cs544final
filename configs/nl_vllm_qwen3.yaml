@@ -1,0 +1,36 @@
+# N×L grid + vLLM + local Qwen3-0.6B (aligned with SSPO README pattern)
+backend: vllm
+
+data:
+  path: /scratch/ktang115/data/strategy-qa/strategyQA_train.json
+  # Same sampled items for each N×L condition (fixed seed); 500 items × 6 conditions = 3000 generations
+  max_items: 500
+  seed: 42
+
+model:
+  name: /scratch/ktang115/models/Qwen3-0.6B
+  trust_remote_code: true
+
+generation:
+  max_new_tokens: 512
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+
+self_consistency:
+  enabled: false
+  num_samples: 5
+  temperature: 0.7
+  top_p: 0.95
+
+output:
+  dir: ./outputs
+
+vllm:
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.9
+  dtype: auto
+  max_model_len: 4096
+  batch_size: 16
+  # true: skip some CUDA graph capture; slower but reduces long stalls on clusters/NFS
+  enforce_eager: true
