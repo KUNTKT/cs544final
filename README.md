@@ -1,122 +1,56 @@
-# CoT Structural Factors Experiment (N, L, R, P)
+# CoT factors (N, L, R, P) on StrategyQA
 
-On a fixed LLM and **StrategyQA**, we manipulate **step count N, verbosity per step L, role R, and perspective P** via prompts, and measure QA accuracy and (optional) self-consistency. The design matches [`docs/RESEARCH_NOTES_CoT_STRUCTURE.md`](./docs/RESEARCH_NOTES_CoT_STRUCTURE.md) and the course proposal PDF.
+Vary prompt structure (steps, verbosity, role, perspective) with **Qwen2.x 7B instruct** (default `Qwen/Qwen2.5-7B-Instruct` in `configs/default.yaml`; set `model.name` to your path or `Qwen/Qwen2-7B-Instruct` if needed). More background: [`docs/RESEARCH_NOTES_CoT_STRUCTURE.md`](./docs/RESEARCH_NOTES_CoT_STRUCTURE.md).
 
-## Environment
-
-- Python ≥ 3.9; install CUDA-matched PyTorch from [pytorch.org](https://pytorch.org/).
-- Install dependencies:
+## 1. Install
 
 ```bash
-cd /scratch/ktang115/cot_factors_study
+cd /path/to/cot_factors_study
 pip install -e .
-# or: pip install -r requirements.txt
 ```
 
-## Configuration
+Use a CUDA build of PyTorch if you run on GPU ([pytorch.org](https://pytorch.org/)).
 
-Edit `configs/default.yaml`:
+## 2. Config
 
-- `data.path`: StrategyQA JSON (array of objects with `question`, boolean `answer`, `facts`, etc.).
-- `model.name`: e.g. `Qwen/Qwen2.5-7B-Instruct` or a local path.
-- `data.max_items`: `null` for full data; use `50` for quick debugging.
-- `self_consistency`: set `enabled: true` for multi-sample voting.
+Edit **`configs/default.yaml`** (or pass flags):
 
-## Running experiments
+- **`data.path`** — StrategyQA JSON (list of items with `question`, boolean `answer`, optional `facts`)
+- **`model.name`** — Hub id or local model folder
+- **`data.max_items`** — `null` = all; use a small number to debug
 
-From the project root (set `PYTHONPATH`, or use `pip install -e .`):
+## 3. Run
 
 ```bash
-export PYTHONPATH=/scratch/ktang115/cot_factors_study
+export PYTHONPATH=/path/to/cot_factors_study   # not needed if you used pip install -e .
 
-# Dry-run: metadata and condition list only
+# List conditions and count only (no model load)
 python3 -m cot_factors.run --dry-run
 
-# Default: ablation (baseline + one-factor sweeps), ~8 conditions
+# Ablation (~8 conditions), default config
 python3 -m cot_factors.run --config configs/default.yaml
 
-# Single condition (slug: four segments joined by __)
-python3 -m cot_factors.run --mode single \
-  --condition n_mid__l_concise__r_student__p_deductive \
-  --max-items 100
+# One condition; slug = n_*__l_*__r_*__p_*
+python3 -m cot_factors.run --mode single --condition n_mid__l_concise__r_student__p_deductive --max-items 100
 
-# Full factorial grid (3×2×3×2 = 36 conditions; long runtime)
+# Full grid 3×2×3×2 = 36 conditions
 python3 -m cot_factors.run --mode factorial --max-items 50
 
-# Optionally include StrategyQA facts in the prompt
+# Optional: add facts to the prompt
 python3 -m cot_factors.run --include-facts
 ```
 
-### vLLM: N×L grid + Qwen3-0.6B (same env pattern as SSPO)
+**vLLM (optional):** install vLLM, set `data.path` / `model.name` in a yaml, then e.g.  
+`python3 -m cot_factors.run --config configs/vllm_qwen25_7b_factorial_full.yaml --backend vllm --mode factorial`  
+or **`./scripts/run_factorial_qwen25_vllm_full.sh`**. For a small N×L-only test: **`./scripts/run_nl_vllm_qwen3.sh`** (uses its own yaml; override `PYTHON` if vLLM is in another env).
 
-Requires **vLLM** matched to your CUDA. Script **`run_nl_vllm_qwen3.sh`** defaults to `/scratch/ktang115/envs/sspo/bin/python` so that after `module load mamba`, the `python` on `PATH` does not shadow the conda env where **vllm** is installed. If vLLM lives elsewhere:
+Results go to **`outputs/run_<timestamp>/`** (`predictions__*.jsonl`, `summary.json`).
 
-```bash
-export PYTHON=/path/to/that/env/bin/python
-./scripts/run_nl_vllm_qwen3.sh
-```
-
-You can also follow [`SSPO/README_SSPOLTO.md`](../SSPO/README_SSPOLTO.md) to activate `sspo`, but run experiments with the script or an explicit Python path:
-
-```bash
-cd /scratch/ktang115/cot_factors_study
-export PYTHONPATH=/scratch/ktang115/cot_factors_study
-
-# N×L only: 6 conditions (3 step counts × 2 verbosity levels), R=r_student, P=p_deductive fixed
-./scripts/run_nl_vllm_qwen3.sh
-
-# Or pass config explicitly; example item cap: --max-items 50
-python3 -m cot_factors.run --config configs/nl_vllm_qwen3.yaml --backend vllm --mode nl_grid --max-items 50
-```
-
-Config: `configs/nl_vllm_qwen3.yaml` (`backend: vllm`, default model `/scratch/ktang115/models/Qwen3-0.6B`; **default `data.max_items: 500`**: 500 items per N×L condition → 6×500 = 3000 generations; set `null` for full train split). Batch size: `vllm.batch_size`.
-
-**GPU**: vLLM runs on **CUDA**; there is no CPU-only path. On login nodes or jobs without a GPU, `CUDA_VISIBLE_DEVICES` is often empty and `torch.cuda.is_available()` is false. Use your cluster GPU queue (e.g. Slurm `--gres=gpu:1`) or an interactive session with a GPU. Startup prints `[cuda] ...` for a quick check.
-
-**Sanity check**: bare `python` on clusters may not be the conda interpreter (`No module named 'torch'`). Use a fixed path or `export PYTHON=...`:
-
-```bash
-./scripts/check_gpu_env.sh
-# or
-/scratch/ktang115/envs/sspo/bin/python -c "import torch; print(torch.cuda.is_available(), torch.cuda.device_count())"
-```
-
-First load can show **~0% GPU utilization** for a while (disk IO, compilation); that is normal.
-
-**If logs stall**: (1) `tail -f outputs/run_nl500_latest.log` for `Processed prompts`; (2) `configs/nl_vllm_qwen3.yaml` sets **`enforce_eager: true`** by default (slower but more stable); (3) uncomment **`export VLLM_USE_V1=0`** in `run_nl_vllm_qwen3.sh`; (4) use `tmux`/`sbatch` for long jobs.
-
-Outputs: `outputs/run_<UTC>/` with per-sample `predictions__<condition>.jsonl` and `summary.json`.
-
-## Analysis and paired tests
+## 4. Analyze
 
 ```bash
 python3 -m cot_factors.analyze outputs/run_xxx
-
-# McNemar (two prediction jsonl files, paired by qid)
-python3 -m cot_factors.compare \
-  outputs/run_xxx/predictions__n_mid__l_concise__r_student__p_deductive.jsonl \
-  outputs/run_xxx/predictions__n_high__l_concise__r_student__p_deductive.jsonl
+python3 -m cot_factors.compare path/to/predictions_A.jsonl path/to/predictions_B.jsonl
 ```
 
-## Project layout
-
-| Path | Role |
-|------|------|
-| `cot_factors/prompts.py` | N/L/R/P levels and `StructureCondition` |
-| `cot_factors/dataset.py` | Load StrategyQA and subsample |
-| `cot_factors/inference.py` | Hugging Face generation and chat template |
-| `cot_factors/metrics.py` | Parse `Final answer: Yes/No`, accuracy |
-| `cot_factors/run.py` | Main CLI |
-| `cot_factors/compare.py` | McNemar paired test |
-| `configs/` | YAML experiment configs |
-| `scripts/` | vLLM runners, GPU check, run monitor |
-| `docs/RESEARCH_NOTES_CoT_STRUCTURE.md` | Research questions and variable design |
-
-## Condition ID cheat sheet
-
-- **N**: `n_low`, `n_mid`, `n_high`
-- **L**: `l_concise`, `l_detailed`
-- **R**: `r_logician`, `r_student`, `r_expert`
-- **P**: `p_deductive`, `p_analytical`
-
-Example single-condition slug: `n_mid__l_concise__r_student__p_deductive`.
+**Condition ids:** N = `n_low` / `n_mid` / `n_high`; L = `l_concise` / `l_detailed`; R = `r_logician` / `r_student` / `r_expert`; P = `p_deductive` / `p_analytical`.
